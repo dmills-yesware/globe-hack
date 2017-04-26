@@ -1,19 +1,45 @@
+"use strict";
+
 require("./styles/main.scss");
 import * as d3 from 'd3';
 import * as topojson from 'topojson';
 
-let canvas = d3.select("#world-map");
-let width = canvas.property("width");
-let height = canvas.property("height");
-let context = canvas.node().getContext("2d");
+var canvas = d3.select("#world-map");
+var width = canvas.property("width");
+var height = canvas.property("height");
+var context = canvas.node().getContext("2d");
 
-let projection = d3.geoOrthographic()
-    .translate([width / 2, height / 2])
-    .precision(0.1);
+var projections = {
+    "Mercator": d3.geoMercator()
+        .scale(100)
+        .translate([width / 2, height / 2])
+        .precision(0.1),
+    "Orthographic": d3.geoOrthographic()
+        .scale((height - 10) / 2)
+        .translate([width / 2, height / 2])
+        .precision(0.1)
+};
 
-let path = d3.geoPath()
-    .projection(projection)
-    .context(context);
+var projection = projections["Mercator"];
+
+var projectionSelector = d3
+    .select(".projection-selector")
+    .on('change', onProjectionChange);
+
+var options = projectionSelector
+    .selectAll('option')
+    .data(Object.keys(projections))
+    .enter()
+    .append('option')
+    .text(function (d) { return d; });
+
+
+function onProjectionChange() {
+    projection = projections[projectionSelector.property('value')];
+    render();
+}
+
+var render;
 
 d3.json("data/world-50m.json", function(error, world) {
     if (error) throw error;
@@ -21,19 +47,23 @@ d3.json("data/world-50m.json", function(error, world) {
     var sphere = { type: "Sphere" };
     var land = topojson.feature(world, world.objects.land);
 
-    let render = function() {
+    render = function() {
+        var path = d3.geoPath()
+            .projection(projection)
+            .context(context);
+
         context.clearRect(0, 0, width, height);
 
-        // White-out the area where we're drawing the earth
+        // Without land we just have ocean
         context.beginPath();
         path(sphere);
-        context.fillStyle = "#fff";
+        context.fillStyle = "#C0E7FF";
         context.fill();
 
         // Draw the land
         context.beginPath();
         path(land);
-        context.fillStyle = "#000";
+        context.fillStyle = "#333";
         context.fill();
 
         // Draw the circle around the outside
