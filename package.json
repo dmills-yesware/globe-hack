@@ -4,5 +4,9 @@
   "description": "Experiment with d3, geoJSON, and satellite data",
   "main": "index.js",
   "repository": "https://github.com/dmills-yesware/globe-hack",
-  "author": "David Mills <dmills@yesware.com>"
+  "author": "David Mills <dmills@yesware.com>",
+  "dependencies": {
+    "webpack": "^2.4.1",
+    "webpack-dev-server": "^2.4.5"
+  }
 }
