@@ -1,0 +1,8 @@
+{
+  "name": "globe-hack",
+  "version": "1.0.0",
+  "description": "Experiment with d3, geoJSON, and satellite data",
+  "main": "index.js",
+  "repository": "https://github.com/dmills-yesware/globe-hack",
+  "author": "David Mills <dmills@yesware.com>"
+}
