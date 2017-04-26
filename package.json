@@ -7,7 +7,7 @@
   "author": "David Mills <dmills@yesware.com>",
   "license": "MIT",
   "scripts": {
-    "build": "babel src -d lib",
+    "build": "babel src -d build-output/babel",
     "start": "webpack-dev-server"
   },
   "devDependencies": {
