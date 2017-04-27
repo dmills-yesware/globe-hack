@@ -9,34 +9,10 @@ var width = canvas.property("width");
 var height = canvas.property("height");
 var context = canvas.node().getContext("2d");
 
-var projections = {
-    "Mercator": d3.geoMercator()
-        .translate([width / 2, height / 2])
-        .precision(0.1),
-    "Orthographic": d3.geoOrthographic()
-        .scale((height - 10) / 2)
-        .translate([width / 2, height / 2])
-        .precision(0.1)
-};
-
-var projection = projections["Mercator"];
-
-var projectionSelector = d3
-    .select(".projection-selector")
-    .on('change', onProjectionChange);
-
-var options = projectionSelector
-    .selectAll('option')
-    .data(Object.keys(projections))
-    .enter()
-    .append('option')
-    .text(function (d) { return d; });
-
-
-function onProjectionChange() {
-    projection = projections[projectionSelector.property('value')];
-    render();
-}
+var projection = d3.geoOrthographic()
+    .scale((height - 10) / 2)
+    .translate([width / 2, height / 2])
+    .precision(0.1);
 
 var render;
 

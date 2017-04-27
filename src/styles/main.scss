@@ -11,3 +11,37 @@ header {
     vertical-align: middle;
   }
 }
+
+body {
+  background: #fcfcfa;
+  height: 500px;
+  position: relative;
+  width: 960px;
+}
+
+.stroke {
+  fill: none;
+  stroke: #333;
+  stroke-width: 3px;
+}
+
+.ocean {
+  fill: #C0E7FF;
+}
+
+.graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: .5px;
+  stroke-opacity: .5;
+}
+
+.land {
+  fill: #333;
+}
+
+.boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-width: .5px;
+}

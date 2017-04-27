@@ -2,6 +2,7 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
+    devtool: "source-map",
     entry: {
         globe: "./src/scripts/globe.js",
         projections: "./src/scripts/projections.js"

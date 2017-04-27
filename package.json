@@ -27,6 +27,7 @@
   "dependencies": {
     "d3": "^4.8.0",
     "d3-geo": "^1.6.3",
+    "d3-geo-projection": "^2.1.0",
     "topojson": "^3.0.0"
   }
 }
