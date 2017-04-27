@@ -1,6 +1,6 @@
 "use strict";
 
-require("./styles/main.scss");
+require("../styles/main.scss");
 import * as d3 from 'd3';
 import * as topojson from 'topojson';
 
@@ -11,7 +11,6 @@ var context = canvas.node().getContext("2d");
 
 var projections = {
     "Mercator": d3.geoMercator()
-        .scale(100)
         .translate([width / 2, height / 2])
         .precision(0.1),
     "Orthographic": d3.geoOrthographic()
