@@ -65,11 +65,10 @@ projections.forEach((o) => {
     o.projection.rotate([0, 0]).center([0, 0]);
 });
 
-// The projection selector
-var menu = d3.select(".projection-selector")
-    .on("change", onChange);
+var projectionSelector = d3.select(".projection-selector")
+    .on("change", onProjectionChange);
 
-menu.selectAll("option")
+projectionSelector.selectAll("option")
     .data(projections)
     .enter().append("option")
     .text(function(d) { return d.name; });
@@ -115,7 +114,7 @@ d3.json("data/world-110m.json", (error, world) => {
         .attr("d", path);
 });
 
-function onChange() {
+function onProjectionChange() {
     update(projections[this.selectedIndex]);
 }
 
@@ -154,115 +153,158 @@ function projectionTween(projection0, projection1) {
 // Satellites
 // Based on https://bl.ocks.org/syntagmatic/6c149c08fc9cde682635
 
-var satellite = require("satellite.js");
+var satellitejs = require("satellite.js");
 
-d3.text("data/stations.txt", function(error, data) {
-    if (error) throw error;
+var satelliteDatas = [
+    { name: "Space Stations", file: "data/stations.txt" },
+    { name: "GPS Satellites", file: "data/gps.txt" },
+    { name: "Science Satellites", file: "data/science.txt" },
+    { name: "Weather Satellites", file: "data/weather.txt" },
+    { name: "zomg satellites!", file: "all" }
+];
 
-    var stations = [];
-    var lines = data.split("\n");
-    lines.forEach(function(line) {
-        if (line.length == 0) return;
+var satSelector = d3.select(".sat-selector")
+    .on("change", drawSatellites);
 
-        if (line[0] == "1") {
-            let obj = stations[stations.length-1];
-            obj.tle1 = line;
-            return;
-        }
+satSelector.selectAll("option")
+    .data(satelliteDatas)
+    .enter().append("option")
+    .text(function(d) { return d.name; });
 
-        if (line[0] == "2") {
-            let obj = stations[stations.length-1];
-            obj.tle2 = line;
-            return;
-        }
+function drawSatellites() {
+    var allSatFiles = () => {
+        return satelliteDatas
+            .filter(d => d.file !== "all")
+            .map(d => d.file);
+    };
 
-        stations.push({
-            name: line.trim()
+    var satData = satelliteDatas[satSelector.property("selectedIndex")];
+    var satFiles = satData.file === "all" ? allSatFiles() : [ satData.file ];
+
+    var satDataQueue = d3.queue();
+    satFiles.forEach(file => satDataQueue.defer(d3.text, file));
+
+    loadSatData(satDataQueue);
+}
+
+var loadSatData = (satDataQueue) => {
+
+    satDataQueue.awaitAll((error, files) => {
+        if (error) throw error;
+
+        var satellites = [];
+        var data = files.join("\n");
+        var lines = data.split("\n");
+        lines.forEach(function(line) {
+            if (line.length == 0) return;
+
+            if (line[0] == "1") {
+                let obj = satellites[satellites.length-1];
+                obj.tle1 = line;
+                return;
+            }
+
+            if (line[0] == "2") {
+                let obj = satellites[satellites.length-1];
+                obj.tle2 = line;
+                return;
+            }
+
+            satellites.push({
+                name: line.trim()
+            });
         });
+
+        restartTimer(satellites);
     });
+};
+
+var timer;
+var restartTimer = (satellites) => {
+    d3.selectAll(".satellite-group").remove();
+    if (timer) {
+        timer.stop();
+    }
 
     var now = new Date();
     var timeFormat = d3.timeFormat("%Y-%m-%d %H:%M");
-    var speed = 500; // 300 times faster than real time
+    var speed = 500; // N times faster than real time
 
-
-    d3.timer(function(elapsed) {
+    timer = d3.timer(function(elapsed) {
         var time = new Date(now.getTime() + speed*elapsed);
 
         // Display the current time
         d3.select(".time").text(timeFormat(time));
 
-        stations.forEach(function(station) {
-            plotsat(station, time);
+        satellites.forEach(function(sat) {
+            plotsat(sat, time);
         });
-
     });
+};
 
-    function plotsat(station, time) {
-        var satrec = satellite.twoline2satrec(station.tle1, station.tle2);
+function plotsat(satellite, time) {
+    var satrec = satellitejs.twoline2satrec(satellite.tle1, satellite.tle2);
 
-        // increment time by 5 minutes
+    // increment time by 5 minutes
 
-        var positionAndVelocity = satellite.propagate(
-            satrec,
-            time.getUTCFullYear(),
-            time.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
-            time.getUTCDate(),
-            time.getUTCHours(),
-            time.getUTCMinutes(),
-            time.getUTCSeconds()
-        );
+    var positionAndVelocity = satellitejs.propagate(
+        satrec,
+        time.getUTCFullYear(),
+        time.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+        time.getUTCDate(),
+        time.getUTCHours(),
+        time.getUTCMinutes(),
+        time.getUTCSeconds()
+    );
 
-        if (!positionAndVelocity.position) {
-            if (time.getTime() - now.getTime() > 1000) return;
-            console.log("No position data for:");
-            console.log(station, satrec);
-            return;
-        }
-
-        var gmst = satellite.gstimeFromDate(
-            time.getUTCFullYear(),
-            time.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
-            time.getUTCDate(),
-            time.getUTCHours(),
-            time.getUTCMinutes(),
-            time.getUTCSeconds()
-        );
-
-        // The position_velocity result is a key-value pair of ECI coordinates.
-        // These are the base results from which all other coordinates are derived.
-        var positionEci = positionAndVelocity.position,
-            velocityEci = positionAndVelocity.velocity;
-
-        var positionGd = satellite.eciToGeodetic(positionEci, gmst);
-        drawSat(station, positionGd);
+    if (!positionAndVelocity.position) {
+        if (time.getTime() - now.getTime() > 1000) return;
+        console.log("No position data for:");
+        console.log(satellite, satrec);
+        return;
     }
-});
+
+    var gmst = satellitejs.gstimeFromDate(
+        time.getUTCFullYear(),
+        time.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+        time.getUTCDate(),
+        time.getUTCHours(),
+        time.getUTCMinutes(),
+        time.getUTCSeconds()
+    );
+
+    // The position_velocity result is a key-value pair of ECI coordinates.
+    // These are the base results from which all other coordinates are derived.
+    var positionEci = positionAndVelocity.position,
+        velocityEci = positionAndVelocity.velocity;
+
+    var positionGd = satellitejs.eciToGeodetic(positionEci, gmst);
+    drawSat(satellite, positionGd);
+}
 
 function drawSat(sat, pos) {
     var xy = currentProjection([pos.longitude*180/Math.PI, pos.latitude*180/Math.PI]);
 
     var satDomId = sat.name.replace(/^[^a-z]+|[^\w:.-]+/gi, "");
-    var el = d3.select("#" + satDomId);
-    if (!el.size()) {
-        el = svg.append("circle")
-                .attr("id", satDomId)
-                .attr("class", "satellite")
-                .attr("r", 4);
+    var group = d3.select("#" + satDomId);
+    if (!group.size()) {
+        group = svg.append("g")
+            .attr("class", "satellite-group")
+            .attr("id", satDomId);
+
+        // A dot for the satellite
+        group.append("circle")
+            .attr("class", "satellite")
+            .attr("r", 4);
+
+        // Name label
+        group.append("text")
+            .attr("class", "satellite-label")
+            .text(sat.name);
     }
 
-    el
-        .attr("cx", xy[0])
-        .attr("cy", xy[1]);
-
-
-    //context2.fillStyle = color(name);
-    //context2.beginPath();
-    //context2.arc(xy[0],xy[1],2,0,2*Math.PI);
-    //context2.fill();
-    //
-    //context2.font = "bold 11px sans-serif";
-    //context2.textAlign = "center";
-    //context2.fillText(name, xy[0], xy[1]+14);
+    group.attr("transform", `translate(${xy[0]}, ${xy[1]})`);
 }
 
+// Load the default satellite data right away
+drawSatellites();
