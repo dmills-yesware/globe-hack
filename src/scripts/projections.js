@@ -41,7 +41,7 @@ var projections = [
     {name: "Larrivée", projection: d3.geoLarrivee().scale(95)},
     {name: "Laskowski", projection: d3.geoLaskowski().scale(120)},
     {name: "Loximuthal", projection: d3.geoLoximuthal()},
-  //  {name: "Mercator", projection: d3.geoMercator().scale(490 / 2 / Math.PI)},
+    {name: "Mercator", projection: d3.geoMercator().scale(90)},
     {name: "Miller", projection: d3.geoMiller().scale(100)},
     {name: "McBryde–Thomas Flat-Polar Parabolic", projection: d3.geoMtFlatPolarParabolic()},
     {name: "McBryde–Thomas Flat-Polar Quartic", projection: d3.geoMtFlatPolarQuartic()},
