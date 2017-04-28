@@ -183,22 +183,19 @@ d3.text("data/stations.txt", function(error, data) {
 
     var now = new Date();
     var timeFormat = d3.timeFormat("%Y-%m-%d %H:%M");
+    var speed = 500; // 300 times faster than real time
+
 
     d3.timer(function(elapsed) {
-        var time = new Date(now.getTime() + 300*elapsed);
-        //context2.clearRect(0,0,width,height);
-        //
-        //context2.font = "bold 14px sans-serif";
-        //context2.fillStyle = "#333";
-        //context2.textAlign = "center";
-        //context2.fillText(timeFormat(time),width/2,20);
+        var time = new Date(now.getTime() + speed*elapsed);
+
+        // Display the current time
         d3.select(".time").text(timeFormat(time));
 
-        d3.selectAll(".satellite").remove();
-
-        stations.forEach(function(d) {
-           plotsat(d, time);
+        stations.forEach(function(station) {
+            plotsat(station, time);
         });
+
     });
 
     function plotsat(station, time) {
@@ -243,14 +240,21 @@ d3.text("data/stations.txt", function(error, data) {
 });
 
 function drawSat(sat, pos) {
-    var name = sat.name;
     var xy = currentProjection([pos.longitude*180/Math.PI, pos.latitude*180/Math.PI]);
 
-    svg.append("circle")
-        .attr("class", "satellite")
+    var satDomId = sat.name.replace(/^[^a-z]+|[^\w:.-]+/gi, "");
+    var el = d3.select("#" + satDomId);
+    if (!el.size()) {
+        el = svg.append("circle")
+                .attr("id", satDomId)
+                .attr("class", "satellite")
+                .attr("r", 4);
+    }
+
+    el
         .attr("cx", xy[0])
-        .attr("cy", xy[1])
-        .attr("r", 4);
+        .attr("cy", xy[1]);
+
 
     //context2.fillStyle = color(name);
     //context2.beginPath();
