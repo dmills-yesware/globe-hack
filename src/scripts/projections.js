@@ -161,6 +161,7 @@ var satelliteDatas = [
     { name: "GPS Satellites", file: "data/gps.txt" },
     { name: "Science Satellites", file: "data/science.txt" },
     { name: "Weather Satellites", file: "data/weather.txt" },
+    { name: "Cube Satellites", file: "data/cubesats.txt" },
     { name: "zomg satellites!", file: "all" }
 ];
 
@@ -233,8 +234,9 @@ var loadSatData = (satDataQueue) => {
 };
 
 var timer;
+var now = new Date();
 var startTimer = (satellites) => {
-    var now = new Date();
+    now = new Date();
     var timeFormat = d3.timeFormat("%Y-%m-%d %H:%M");
     var speed = 500; // N times faster than real time
 
@@ -293,7 +295,7 @@ function plotsat(satellite, time) {
 function drawSat(sat, pos) {
     var xy = currentProjection([pos.longitude*180/Math.PI, pos.latitude*180/Math.PI]);
 
-    var satDomId = sat.name.replace(/^[^a-z]+|[^\w:.-]+/gi, "");
+    var satDomId = sat.name.replace(/^[^a-z]+|[^\w:-]+/gi, "");
     var group = d3.select("#" + satDomId);
     if (!group.size()) {
         group = svg.append("g")
