@@ -156,6 +156,7 @@ function projectionTween(projection0, projection1) {
 var satellitejs = require("satellite.js");
 
 var satelliteDatas = [
+    { name: "", file: "none" },
     { name: "Space Stations", file: "data/stations.txt" },
     { name: "GPS Satellites", file: "data/gps.txt" },
     { name: "Science Satellites", file: "data/science.txt" },
@@ -171,16 +172,29 @@ satSelector.selectAll("option")
     .enter().append("option")
     .text(function(d) { return d.name; });
 
+var clearSatellites = () => {
+    if (timer) {
+        timer.stop();
+    }
+    d3.selectAll(".satellite-group").remove();
+};
+
 function drawSatellites() {
+    clearSatellites();
+
     var allSatFiles = () => {
         return satelliteDatas
-            .filter(d => d.file !== "all")
+            .filter(d => d.file !== "all" && d.file !== "none")
             .map(d => d.file);
     };
 
     var satData = satelliteDatas[satSelector.property("selectedIndex")];
-    var satFiles = satData.file === "all" ? allSatFiles() : [ satData.file ];
 
+    if (satData.file === "none") {
+        return;
+    }
+
+    var satFiles = satData.file === "all" ? allSatFiles() : [ satData.file ];
     var satDataQueue = d3.queue();
     satFiles.forEach(file => satDataQueue.defer(d3.text, file));
 
@@ -188,7 +202,6 @@ function drawSatellites() {
 }
 
 var loadSatData = (satDataQueue) => {
-
     satDataQueue.awaitAll((error, files) => {
         if (error) throw error;
 
@@ -215,17 +228,12 @@ var loadSatData = (satDataQueue) => {
             });
         });
 
-        restartTimer(satellites);
+        startTimer(satellites);
     });
 };
 
 var timer;
-var restartTimer = (satellites) => {
-    d3.selectAll(".satellite-group").remove();
-    if (timer) {
-        timer.stop();
-    }
-
+var startTimer = (satellites) => {
     var now = new Date();
     var timeFormat = d3.timeFormat("%Y-%m-%d %H:%M");
     var speed = 500; // N times faster than real time
@@ -294,11 +302,15 @@ function drawSat(sat, pos) {
 
         // A dot for the satellite
         group.append("circle")
+            .attr("cx", -2)
+            .attr("cy", -8)
             .attr("class", "satellite")
             .attr("r", 4);
 
         // Name label
         group.append("text")
+            .attr("x", 4)
+            .attr("y", 4)
             .attr("class", "satellite-label")
             .text(sat.name);
     }

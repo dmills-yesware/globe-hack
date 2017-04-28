@@ -12,11 +12,8 @@ header {
   }
 }
 
-body {
-  background: #fcfcfa;
-  height: 500px;
-  position: relative;
-  width: 960px;
+svg {
+  overflow: visible;
 }
 
 .stroke {
@@ -49,6 +46,7 @@ body {
 .time {
   color: #333;
   text-align: center;
+  width: 960px;
 }
 
 .satellite {
@@ -57,5 +55,10 @@ body {
 }
 
 .satellite-label {
+  font-size: 16px;
+  font-weight: bold;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   fill: #aa0100;
+  stroke: #fff;
+  stroke-width: .5px;
 }
