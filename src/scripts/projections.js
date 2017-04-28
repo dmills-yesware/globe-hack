@@ -3,8 +3,13 @@
 
 require("../styles/main.scss");
 
-var d3 = Object.assign({}, require("d3"), require("d3-geo"), require("d3-geo-projection"));
 var topojson = require("topojson");
+var d3 = Object.assign({},
+    require("d3"),
+    require("d3-time"),
+    require("d3-time-format"),
+    require("d3-geo"),
+    require("d3-geo-projection"));
 
 var width = 960;
 var height = 500;
@@ -145,3 +150,115 @@ function projectionTween(projection0, projection1) {
         };
     };
 }
+
+// Satellites
+// Based on https://bl.ocks.org/syntagmatic/6c149c08fc9cde682635
+
+var satellite = require("satellite.js");
+
+d3.text("data/stations.txt", function(error, data) {
+    if (error) throw error;
+
+    var stations = [];
+    var lines = data.split("\n");
+    lines.forEach(function(line) {
+        if (line.length == 0) return;
+
+        if (line[0] == "1") {
+            let obj = stations[stations.length-1];
+            obj.tle1 = line;
+            return;
+        }
+
+        if (line[0] == "2") {
+            let obj = stations[stations.length-1];
+            obj.tle2 = line;
+            return;
+        }
+
+        stations.push({
+            name: line.trim()
+        });
+    });
+
+    var now = new Date();
+    var timeFormat = d3.timeFormat("%Y-%m-%d %H:%M");
+
+    d3.timer(function(elapsed) {
+        var time = new Date(now.getTime() + 300*elapsed);
+        //context2.clearRect(0,0,width,height);
+        //
+        //context2.font = "bold 14px sans-serif";
+        //context2.fillStyle = "#333";
+        //context2.textAlign = "center";
+        //context2.fillText(timeFormat(time),width/2,20);
+        d3.select(".time").text(timeFormat(time));
+
+        d3.selectAll(".satellite").remove();
+
+        stations.forEach(function(d) {
+           plotsat(d, time);
+        });
+    });
+
+    function plotsat(station, time) {
+        var satrec = satellite.twoline2satrec(station.tle1, station.tle2);
+
+        // increment time by 5 minutes
+
+        var positionAndVelocity = satellite.propagate(
+            satrec,
+            time.getUTCFullYear(),
+            time.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+            time.getUTCDate(),
+            time.getUTCHours(),
+            time.getUTCMinutes(),
+            time.getUTCSeconds()
+        );
+
+        if (!positionAndVelocity.position) {
+            if (time.getTime() - now.getTime() > 1000) return;
+            console.log("No position data for:");
+            console.log(station, satrec);
+            return;
+        }
+
+        var gmst = satellite.gstimeFromDate(
+            time.getUTCFullYear(),
+            time.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+            time.getUTCDate(),
+            time.getUTCHours(),
+            time.getUTCMinutes(),
+            time.getUTCSeconds()
+        );
+
+        // The position_velocity result is a key-value pair of ECI coordinates.
+        // These are the base results from which all other coordinates are derived.
+        var positionEci = positionAndVelocity.position,
+            velocityEci = positionAndVelocity.velocity;
+
+        var positionGd = satellite.eciToGeodetic(positionEci, gmst);
+        drawSat(station, positionGd);
+    }
+});
+
+function drawSat(sat, pos) {
+    var name = sat.name;
+    var xy = currentProjection([pos.longitude*180/Math.PI, pos.latitude*180/Math.PI]);
+
+    svg.append("circle")
+        .attr("class", "satellite")
+        .attr("cx", xy[0])
+        .attr("cy", xy[1])
+        .attr("r", 4);
+
+    //context2.fillStyle = color(name);
+    //context2.beginPath();
+    //context2.arc(xy[0],xy[1],2,0,2*Math.PI);
+    //context2.fill();
+    //
+    //context2.font = "bold 11px sans-serif";
+    //context2.textAlign = "center";
+    //context2.fillText(name, xy[0], xy[1]+14);
+}
+
