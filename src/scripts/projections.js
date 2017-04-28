@@ -49,6 +49,7 @@ var projections = [
     {name: "Mollweide", projection: d3.geoMollweide().scale(165)},
     {name: "Natural Earth", projection: d3.geoNaturalEarth()},
     {name: "Nell–Hammer", projection: d3.geoNellHammer()},
+    {name: "Orthographic", projection: d3.geoOrthographic().scale((height - 10) / 2)},
     {name: "Polyconic", projection: d3.geoPolyconic().scale(100)},
     {name: "Robinson", projection: d3.geoRobinson()},
     {name: "Sinusoidal", projection: d3.geoSinusoidal()},
@@ -162,6 +163,7 @@ var satelliteDatas = [
     { name: "Science Satellites", file: "data/science.txt" },
     { name: "Weather Satellites", file: "data/weather.txt" },
     { name: "Cube Satellites", file: "data/cubesats.txt" },
+    { name: "FLOCK 3P 25", file: "data/flock3p25.txt" },
     { name: "zomg satellites!", file: "all" }
 ];
 
@@ -179,6 +181,15 @@ var clearSatellites = () => {
     }
     d3.selectAll(".satellite-group").remove();
 };
+
+d3.select(".run").on("click", () => {
+    if (timer) {
+        timer.stop();
+        timer = null;
+    } else {
+        drawSatellites();
+    }
+});
 
 function drawSatellites() {
     clearSatellites();
@@ -236,7 +247,6 @@ var loadSatData = (satDataQueue) => {
 var timer;
 var now = new Date();
 var startTimer = (satellites) => {
-    now = new Date();
     var timeFormat = d3.timeFormat("%Y-%m-%d %H:%M");
     var speed = 500; // N times faster than real time
 
