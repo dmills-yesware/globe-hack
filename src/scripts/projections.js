@@ -159,6 +159,7 @@ var satellitejs = require("satellite.js");
 var satelliteDatas = [
     { name: "", file: "none" },
     { name: "Space Stations", file: "data/stations.txt" },
+    { name: "Geostationary Satellites", file: "data/geostationary.txt" },
     { name: "GPS Satellites", file: "data/gps.txt" },
     { name: "Science Satellites", file: "data/science.txt" },
     { name: "Weather Satellites", file: "data/weather.txt" },
