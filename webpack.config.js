@@ -5,7 +5,7 @@ module.exports = {
     devtool: "source-map",
     entry: {
         globe: "./src/scripts/globe.js",
-        projections: "./src/scripts/projections.js"
+        "hello-world": "./src/scripts/hello-world.js"
     },
     output: {
         path: path.resolve("build-output"),
@@ -23,15 +23,19 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
+            template: "./src/index.html",
+            filename: "index.html"
+        }),
+        new HtmlWebpackPlugin({
             template: "./src/globe.html",
             filename: "globe.html",
             chunks: ["globe"],
             inject: "body"
         }),
         new HtmlWebpackPlugin({
-            template: "./src/projections.html",
-            filename: "projections.html",
-            chunks: ["projections"],
+            template: "./src/hello-world.html",
+            filename: "hello-world.html",
+            chunks: ["hello-world"],
             inject: "body"
         })
     ]
